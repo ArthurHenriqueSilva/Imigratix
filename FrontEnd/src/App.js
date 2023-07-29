@@ -1,20 +1,10 @@
 import React from 'react';
-import Dashboard from './Dashboard';
-import AppSummary from './AppSummary';
-import logo from './logo.png';
+import Home from './pages/Home';
 
 const App = () => {
   return (
     <div>
-      <header>
-        <img className="logo" src={logo} alt="Logo"></img>
-      </header>
-      <div className="content">
-        <AppSummary />
-        <div className="dashboard">
-          <Dashboard />
-        </div>
-      </div>
+      <Home />
     </div>
   );
 };

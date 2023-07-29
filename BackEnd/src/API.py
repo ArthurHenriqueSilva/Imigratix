@@ -10,6 +10,22 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 from models import Registro, Residente, Provisorio, Temporario, Fronteirico, Pais, UF
 
+#----------- FUNÇÕES PARA IP ----------------
+def get_request_ip(request):
+    return jsonify({'ip': request.remote_addr}), 200
+
+def get_locations(ip):
+    response = request.get('http://ip-api.com/json/' + ip).json()
+    return {
+        'continent': response['continent'],
+        'country': response['country'],
+        'region': response['regionName'],
+        'city': response['city'],
+        'lat': response['lat'],
+        'lon': response['lon'],
+        'zip': response['zip']
+    }
+
 # ---------- Funções Aux DA API -------------
 # Cadastro de Imigrante Residente
 def cadastrar_residente(uf, pais, qtd):
