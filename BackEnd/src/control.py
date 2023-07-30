@@ -1,5 +1,5 @@
 from flask import render_template, request
-from API import app
+from API import app, google_blueprint, facebook_blueprint
 import requests
 from models import *
 from flask_cors import CORS
@@ -7,6 +7,8 @@ from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
 auth = HTTPBasicAuth()
+app.register_blueprint(google_blueprint, url_prefix="/api/login", name="google_auth")
+app.register_blueprint(facebook_blueprint, url_prefix="/api/login", name="facebook_auth")
 
 users = {
     "arthur": generate_password_hash("henrique"),
@@ -22,9 +24,23 @@ def verify_password(usuario, senha):
 
 CORS(app)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route('/auth/google')
+def auth_google():
+    response = requests.post('http://localhost:5000/api/login/google')
+    if response.status_code == 200:
+        result = response.json()
+        return result
+    else:
+        return 'Erro ao autenticar usuário'
+    
+@app.route('/auth/facebook')
+def auth_facebook():
+    response = requests.post('http://localhost:5000/api/login/facebook')
+    if response.status_code == 200:
+        result = response.json()
+        return result
+    else:
+        return 'Erro ao autenticar usuário'
 
 @app.route('/client')
 def proxy_client():

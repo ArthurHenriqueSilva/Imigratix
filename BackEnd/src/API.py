@@ -1,6 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, redirect, request, jsonify, url_for
 from flask_sqlalchemy import SQLAlchemy
-from aux_data import estados, meses
+import google_auth_oauthlib
+from aux_data import estados
+from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.contrib.facebook import make_facebook_blueprint, facebook
 
 
 app = Flask(__name__)  # create Flask app
@@ -9,6 +12,56 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:chaveacesso@db-in
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 from models import Registro, Residente, Provisorio, Temporario, Fronteirico, Pais, UF
+
+#----------- AUTENTICAÇÃO -------------------
+# Configuração do OAuth para Google
+app.secret_key = 'issoaquitemqueterumasenhamtoforte'
+
+# Configurações para o OAuth do Google
+google_blueprint = make_google_blueprint(
+    client_id="",
+    client_secret="",
+    scope=["email"],
+    offline=True,  # Solicita acesso offline para obter o token de atualização
+)
+app.register_blueprint(google_blueprint, url_prefix="/login")
+
+# Configurações para o OAuth do Facebook
+facebook_blueprint = make_facebook_blueprint(
+    client_id="seu_id_do_aplicativo_do_facebook",
+    client_secret="seu_secret_do_aplicativo_do_facebook",
+    scope=["email"],
+    redirect_to="authorized_facebook",
+)
+app.register_blueprint(facebook_blueprint, url_prefix="/login")
+
+@app.route('/api/login/google')
+def login_google():
+    if not google_auth_oauthlib.authorized:
+        return redirect(url_for("google.login"))
+    return redirect(url_for("authorized_google"))
+
+@app.route('/api/login/google/authorized')
+def authorized_google():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    resp = google.get("/oauth2/v1/userinfo")
+    user_info = resp.json()
+    return jsonify(user_info)
+
+@app.route('/api/login/facebook')
+def login_facebook():
+    if not facebook.authorized:
+        return redirect(url_for("facebook.login"))
+    return redirect(url_for("authorized_facebook"))
+
+@app.route('/api/login/facebook/authorized')
+def authorized_facebook():
+    if not facebook.authorized:
+        return redirect(url_for("facebook.login"))
+    resp = facebook.get("/me?fields=id,email")
+    user_info = resp.json()
+    return jsonify(user_info)
 
 #----------- FUNÇÕES PARA IP ----------------
 def get_request_ip(request):
