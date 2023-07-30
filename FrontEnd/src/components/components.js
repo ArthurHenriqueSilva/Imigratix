@@ -70,8 +70,6 @@ const Frame1 = () => {
             País para filtragem:
           </label>
           <input type="text" name="pais_filtro_distribuicao_imigrantes_pais" />
-
-          {/* Renderização condicional do botão */}
           {!loading && (
             <button className="submit_button" type="submit">
               Enviar
@@ -87,12 +85,14 @@ const Frame1 = () => {
             <table>
               <thead>
                 <tr>
+                  <th colSpan={2}>{data.pais}</th>
+                </tr>
+                <tr>
                   <th>Classificação</th>
                   <th>Total</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Renderizar apenas as linhas de classificação, excluindo a linha de "pais" */}
                 {Object.entries(data).map(([key, value]) => {
                   if (key !== 'pais') {
                     return (
@@ -102,11 +102,10 @@ const Frame1 = () => {
                       </tr>
                     );
                   }
-                  return null; // Excluir a linha de "pais" da renderização
+                  return null;
                 })}
               </tbody>
             </table>
-            {/* Botão de reset */}
             <button className="reset_button" onClick={handleReset}>
               Reset
             </button>

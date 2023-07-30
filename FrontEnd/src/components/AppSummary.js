@@ -108,29 +108,11 @@ const AppSummary = () => {
         </div>
 
         <div className="resumeData">
-          <h2>Resumo dos dados</h2>
+          <h2>Desenvolvedores</h2>
           <table className="floatleft">
             <thead>
               <tr>
-                <th>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="icon icon-tabler icon-tabler-user-circle"
-                    width="44"
-                    height="44"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#2c3e50"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                    <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                    <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855" />
-                  </svg>
-                </th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -142,25 +124,7 @@ const AppSummary = () => {
           <table className="floatleft">
             <thead>
               <tr>
-                <th>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="icon icon-tabler icon-tabler-user-circle"
-                    width="44"
-                    height="44"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#2c3e50"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                    <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                    <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855" />
-                  </svg>
-                </th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -172,25 +136,7 @@ const AppSummary = () => {
           <table className="floatleft">
             <thead>
               <tr>
-                <th>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="icon icon-tabler icon-tabler-user-circle"
-                    width="44"
-                    height="44"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="#2c3e50"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                    <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                    <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855" />
-                  </svg>
-                </th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
