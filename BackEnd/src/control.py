@@ -10,6 +10,8 @@ auth = HTTPBasicAuth()
 app.register_blueprint(google_blueprint, url_prefix="/api/login", name="google_auth")
 app.register_blueprint(facebook_blueprint, url_prefix="/api/login", name="facebook_auth")
 
+auth = HTTPBasicAuth()
+
 users = {
     "arthur": generate_password_hash("henrique"),
     "guilherme": generate_password_hash("linard"),
@@ -21,6 +23,11 @@ def verify_password(usuario, senha):
     if usuario in users and \
             check_password_hash(users.get(usuario), senha):
         return usuario
+
+@app.route('/')
+@auth.login_required
+def index():
+    return render_template('index.html')
 
 CORS(app)
 
