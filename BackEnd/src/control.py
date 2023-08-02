@@ -42,7 +42,7 @@ def auth_facebook():
     else:
         return 'Erro ao autenticar usuário'
 
-@app.route('/client/')
+@app.route('/client')
 def proxy_client():
     ip_addr = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
     return '<h1> Seu endereço de IP é:' + ip_addr
