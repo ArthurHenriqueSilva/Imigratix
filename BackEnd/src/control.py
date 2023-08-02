@@ -24,7 +24,7 @@ def verify_password(usuario, senha):
 
 CORS(app)
 
-@app.route('/auth/google')
+@app.route('/auth/google/')
 def auth_google():
     response = requests.post('http://localhost:80/api/login/google')
     if response.status_code == 200:
@@ -33,7 +33,7 @@ def auth_google():
     else:
         return 'Erro ao autenticar usuário'
     
-@app.route('/auth/facebook')
+@app.route('/auth/facebook/')
 def auth_facebook():
     response = requests.post('http://localhost:80/api/login/facebook')
     if response.status_code == 200:
@@ -42,13 +42,13 @@ def auth_facebook():
     else:
         return 'Erro ao autenticar usuário'
 
-@app.route('/client')
+@app.route('/client/')
 def proxy_client():
     ip_addr = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
     return '<h1> Seu endereço de IP é:' + ip_addr
 
 # q1
-@app.route('/distribuicao_imigrantes_pais', methods=['POST'])
+@app.route('/distribuicao_imigrantes_pais/', methods=['POST'])
 def func_distribuicao_imigrantes_pais():
     print(request.form)
     pais_filtro = request.form['pais_filtro_distribuicao_imigrantes_pais']
@@ -62,7 +62,7 @@ def func_distribuicao_imigrantes_pais():
 
 
 # #q2
-@app.route('/pais_mais_imigracao_periodo', methods=['POST'])
+@app.route('/pais_mais_imigracao_periodo/', methods=['POST'])
 def func_pais_mais_imigracao_periodo():
     mes_inicial = request.form['mes_inicio_pais_mais_imigracao_periodo']
     mes_final = request.form['mes_fim_pais_mais_imigracao_periodo']
@@ -78,7 +78,7 @@ def func_pais_mais_imigracao_periodo():
     else:
         return 'Erro ao obter o país com mais imigração em determinado período'
 # # q3
-@app.route('/tipo_imigracao_mais_popular_periodo', methods=['POST'])
+@app.route('/tipo_imigracao_mais_popular_periodo/', methods=['POST'])
 def func_tipo_imigracao_periodo():
     mes_inicial = request.form['mes_inicio_tipo_imigracao_mais_popular_periodo']
     mes_final = request.form['mes_fim_tipo_imigracao_mais_popular_periodo']
@@ -90,7 +90,7 @@ def func_tipo_imigracao_periodo():
     else:
         return 'Erro ao obter o tipo de imigração mais popular em determinado período'  
 # # q4
-@app.route('/periodo_popular_tipo', methods=['POST'])
+@app.route('/periodo_popular_tipo/', methods=['POST'])
 def func_periodo_popular_tipo():
     tipo_filtro = request.form['tipo_filtro_periodo_popular']
     data = {'classificacao': tipo_filtro}
@@ -102,7 +102,7 @@ def func_periodo_popular_tipo():
     else:
         return 'Erro ao obter o período mais popular de tipo de imigração'  
 # # q5
-@app.route('/mes_popular_estado', methods=['POST'])
+@app.route('/mes_popular_estado/', methods=['POST'])
 def func_mes_popular_estado():
     estado_filtro = request.form['estado_filtro_mes_popular_estado']
     classificacao_filtro = request.form['classificacao_filtro_mes_popular_estado']
@@ -114,7 +114,7 @@ def func_mes_popular_estado():
     else:
         return 'Erro ao obter o mês mais popular de imigração para o estado'    
 # # q6
-@app.route('/estado_mais_residente_no_mes', methods=['POST'])
+@app.route('/estado_mais_residente_no_mes/', methods=['POST'])
 def func_estado_mais_residente_no_mes():
     mes = request.form['mes_estado_mais_residente_por_periodo']
     data = {'mes': mes}
@@ -130,7 +130,7 @@ def func_estado_mais_residente_no_mes():
 
 
 # q7
-@app.route('/estado_mais_imigrantes', methods=['POST'])
+@app.route('/estado_mais_imigrantes/', methods=['POST'])
 def func_estado_mais_imigrantes():
     pais_filtro = request.form['pais_filtro_estado_mais_imigrantes']
     data = {'pais': pais_filtro}
@@ -142,7 +142,7 @@ def func_estado_mais_imigrantes():
         return 'Erro ao obter o estado com mais imigrantes'
     
 # # q8
-@app.route('/tipo_imigrante_pais', methods=['POST'])
+@app.route('/tipo_imigrante_pais/', methods=['POST'])
 def func_tipo_imigrante_pais():
     pais_filtro = request.form['pais_filtro_tipo_imigrante_pais']
     data = {'pais':pais_filtro}
@@ -153,7 +153,7 @@ def func_tipo_imigrante_pais():
     else:
         return 'Erro ao obter o tipo mais comum de imigrantes do país escolhido.'
 # # q9
-@app.route('/quantidade_pais_maior_periodo_imigracao', methods=['POST'])
+@app.route('/quantidade_pais_maior_periodo_imigracao/', methods=['POST'])
 def func_pais_imigracao_periodo_popular():
     pais_filtro = request.form['pais_filtro_pais_imigracao_periodo_popular']
     mes_filtro = request.form['mes_filtro_pais_imigracao_periodo_popular']
@@ -165,7 +165,7 @@ def func_pais_imigracao_periodo_popular():
     else:
         return 'Erro ao obter a quantidade de imigrantes do país escolhido no período informado'
 # # q10
-@app.route('/classificacao_imigracao_mais_popular_mes', methods=['POST'])
+@app.route('/classificacao_imigracao_mais_popular_mes/', methods=['POST'])
 def func_classificacao_pais_tempo():
     pais_filtro = request.form['pais_filtro_classificacao_imigracao_mais_popular_mes']
     mes_filtro = request.form['mes_filtro_classificacao_pais_tempo']
