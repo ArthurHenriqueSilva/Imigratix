@@ -1,13 +1,19 @@
-from flask import Flask, redirect, request, jsonify, url_for
+import os
+import pathlib
+from flask_cors import CORS
+from flask import Flask, abort, redirect, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
-import google_auth_oauthlib
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import Flow
+from pip._vendor import cachecontrol
+import google.auth.transport.requests
+import requests
 from aux_data import estados
-from flask_dance.contrib.google import make_google_blueprint, google
-from flask_dance.contrib.facebook import make_facebook_blueprint, facebook
-
 
 app = Flask(__name__)  # create Flask app
+CORS(app,origins=["http://localhost:3000", "http://localhost:80"])
 
+# ----------- CONFIGURAÇÕES DO BANCO DE DADOS -------------
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:chaveacesso@db-instance-prog-web.cuokvhdjyvdp.us-east-1.rds.amazonaws.com/Database_SISMIGRA'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -15,53 +21,59 @@ from models import Registro, Residente, Provisorio, Temporario, Fronteirico, Pai
 
 #----------- AUTENTICAÇÃO -------------------
 # Configuração do OAuth para Google
-app.secret_key = 'issoaquitemqueterumasenhamtoforte'
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # Permite o uso de http para testes
+app.secret_key = "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"
+
+GOOGLE_CLIENT_ID = "267501760155-olb9g1g3nf8itdl778fp1241448nb1dc.apps.googleusercontent.com"
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
 
 # Configurações para o OAuth do Google
-google_blueprint = make_google_blueprint(
-    client_id="",
-    client_secret="",
-    scope=["email"],
-    offline=True,  # Solicita acesso offline para obter o token de atualização
+flow = Flow.from_client_secrets_file(
+    client_secrets_file=client_secrets_file,
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    redirect_uri="http://localhost:80/api/auth/google/callback"
 )
-app.register_blueprint(google_blueprint, url_prefix="/login")
 
-# Configurações para o OAuth do Facebook
-facebook_blueprint = make_facebook_blueprint(
-    client_id="seu_id_do_aplicativo_do_facebook",
-    client_secret="seu_secret_do_aplicativo_do_facebook",
-    scope=["email"],
-    redirect_to="authorized_facebook",
-)
-app.register_blueprint(facebook_blueprint, url_prefix="/login")
+def login_is_required(function):
+    def wrapper(*args, **kwargs):
+        if "google_id" not in session:
+            return abort(401) # Unauthorized
+        else:
+            return function()
+    return wrapper
 
-@app.route('/api/login/google')
+@app.route("/api/auth/google/login")
 def login_google():
-    if not google_auth_oauthlib.authorized:
-        return redirect(url_for("google.login"))
-    return redirect(url_for("authorized_google"))
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    return redirect(authorization_url)
 
-@app.route('/api/login/google/authorized')
-def authorized_google():
-    if not google.authorized:
-        return redirect(url_for("google.login"))
-    resp = google.get("/oauth2/v1/userinfo")
-    user_info = resp.json()
-    return jsonify(user_info)
+@app.route("/api/auth/google/callback")
+def callback_google():
+    flow.fetch_token(authorization_response=request.url)
 
-@app.route('/api/login/facebook')
-def login_facebook():
-    if not facebook.authorized:
-        return redirect(url_for("facebook.login"))
-    return redirect(url_for("authorized_facebook"))
+    if not session["state"] == request.args["state"]:
+        abort(500) #estado inválido, login não autorizado
+    
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(session=cached_session)
 
-@app.route('/api/login/facebook/authorized')
-def authorized_facebook():
-    if not facebook.authorized:
-        return redirect(url_for("facebook.login"))
-    resp = facebook.get("/me?fields=id,email")
-    user_info = resp.json()
-    return jsonify(user_info)
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+
+    session["google_id"] = id_info.get("sub")
+    session["name"] = id_info.get("name")
+    return redirect("/home")
+
+@app.route("/auth/google/logout")
+def logout_google():
+    session.clear()
+    return redirect("/login")
 
 #----------- FUNÇÕES PARA IP ----------------
 def get_request_ip(request):
@@ -274,6 +286,7 @@ def consulta_classificacao_pais_tempo(pais_filtro, mes_filtro):
 #Rota 1
 
 @app.route('/api/distribuicao-de-imigrantes-pelo-pais', methods=['POST'])
+@login_is_required
 def distribuicao_imigrantes_pais():
     pais_filtro = request.form.get('pais')
     distribuicao = consulta_distribuicao_imigrantes_pais(pais_filtro)

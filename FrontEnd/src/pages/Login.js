@@ -6,7 +6,7 @@ import '@fortawesome/fontawesome-free/css/all.css';
 const Login = () => {
   const handleGoogleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:5000/auth/google');
+      const response = await fetch('http://localhost:80/api/auth/google/login');
       console.log(response);
       const data = await response.json();
 
@@ -16,21 +16,10 @@ const Login = () => {
     } catch (error) {
       console.error('Erro ao autenticar com o Google:', error);
     }
-
-    console.log('Autenticando com Google...');
   };
 
   const handleFacebookLogin = async () => {
-    try {
-      const response = await fetch('/auth/facebook');
-      const data = await response.json();
-
-      if (data.success) {
-        window.location.href = '/Home';
-      }
-    } catch (error) {
-      console.error('Erro ao autenticar com o Facebook:', error);
-    }
+    console.log('Autenticando com Facebook...');
   };
 
   return (

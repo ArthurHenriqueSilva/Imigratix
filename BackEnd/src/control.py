@@ -1,14 +1,10 @@
-from flask import render_template, request
-from API import app, google_blueprint, facebook_blueprint
+from flask import request, jsonify
+from API import app
 import requests
 from models import *
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-
-auth = HTTPBasicAuth()
-app.register_blueprint(google_blueprint, url_prefix="/api/login", name="google_auth")
-app.register_blueprint(facebook_blueprint, url_prefix="/api/login", name="facebook_auth")
 
 auth = HTTPBasicAuth()
 
@@ -24,30 +20,17 @@ def verify_password(usuario, senha):
             check_password_hash(users.get(usuario), senha):
         return usuario
 
-@app.route('/')
-@auth.login_required
-def index():
-    return render_template('index.html')
 
-CORS(app)
+CORS(app,origins=["http://localhost:3000","http://localhost:80"])
 
 @app.route('/auth/google')
 def auth_google():
-    response = requests.post('http://localhost:80/api/login/google')
+    response = requests.post('http://localhost:80/api/auth/google/login')
     if response.status_code == 200:
         result = response.json()
         return result
     else:
-        return 'Erro ao autenticar usuário'
-    
-@app.route('/auth/facebook')
-def auth_facebook():
-    response = requests.post('http://localhost:80/api/login/facebook')
-    if response.status_code == 200:
-        result = response.json()
-        return result
-    else:
-        return 'Erro ao autenticar usuário'
+        return jsonify( {'erro':'Erro ao autenticar usuário'})
 
 @app.route('/client')
 def proxy_client():
@@ -186,4 +169,4 @@ def func_classificacao_pais_tempo():
         return 'Erro ao obter a classificação mais recorrente no mês especificado advindos do país escolhido.'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80,debug=True)
