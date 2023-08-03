@@ -21,7 +21,7 @@ def verify_password(usuario, senha):
         return usuario
 
 
-CORS(app,origins=["http://localhost:3000","http://localhost:80"])
+CORS(app)
 
 @app.route('/auth/google')
 def auth_google():

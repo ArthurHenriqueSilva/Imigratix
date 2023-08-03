@@ -11,7 +11,7 @@ import requests
 from aux_data import estados
 
 app = Flask(__name__)  # create Flask app
-CORS(app,origins=["http://localhost:3000", "http://localhost:80"])
+CORS(app)
 
 # ----------- CONFIGURAÇÕES DO BANCO DE DADOS -------------
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:chaveacesso@db-instance-prog-web.cuokvhdjyvdp.us-east-1.rds.amazonaws.com/Database_SISMIGRA'
@@ -31,7 +31,7 @@ client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret
 flow = Flow.from_client_secrets_file(
     client_secrets_file=client_secrets_file,
     scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-    redirect_uri="http://localhost:80/api/auth/google/callback"
+    redirect_uri="http://localhost/api/auth/google/callback"
 )
 
 def login_is_required(function):
