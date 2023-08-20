@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 import '../styles/style.css';
 
@@ -13,7 +14,7 @@ const Frame1 = () => {
     const formData = new URLSearchParams();
     formData.append(
       'pais_filtro_distribuicao_imigrantes_pais',
-      event.target.pais_filtro_distribuicao_imigrantes_pais.value
+      event.target.pais_filtro_distribuicao_imigrantes_pais.value,
     );
 
     const requestOptions = {
@@ -23,7 +24,7 @@ const Frame1 = () => {
     };
 
     setLoading(true);
-    fetch('http://localhost:5000/distribuicao_imigrantes_pais', requestOptions)
+    fetch('http://localhost:80/distribuicao_imigrantes_pais', requestOptions)
       .then((res) => {
         if (!res.ok) {
           throw new Error('Erro na solicitação');
@@ -49,7 +50,7 @@ const Frame1 = () => {
         console.error(error);
         setData({});
         setError(
-          'Erro ao obter a distribuição de imigrantes do país escolhido.'
+          'Erro ao obter a distribuição de imigrantes do país escolhido.',
         );
         setLoading(false);
       });
@@ -405,6 +406,60 @@ const Frame10 = () => {
   );
 };
 
+const Frame11 = () => {
+  const availableTables = [
+    'Registro',
+    'UF',
+    'Fronteirico',
+    'Residente',
+    'Temporario',
+    'Provisorio',
+    'Pais',
+  ];
+
+  const [tableData, setTableData] = useState(null);
+
+  const handleTableButtonClick = async (tableName) => {
+    try {
+      const response = await axios.post(
+        'http://localhost:80/api/tabela_completa',
+        {
+          tabela: tableName,
+        },
+      );
+      const data = response.data;
+      setTableData(data);
+    } catch (error) {
+      console.error('Error fetching table data:', error);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Visão integral de tabela</h1>
+      <div>
+        <p>Selecione a tabela a exibir:</p>
+        {availableTables.map((tableName) => (
+          <button
+            key={tableName}
+            className="table_button"
+            onClick={() => handleTableButtonClick(tableName)}
+          >
+            {tableName}
+          </button>
+        ))}
+      </div>
+      {tableData && (
+        <div>
+          <h2>Tabela: {tableData.tabela}</h2>
+          {/* Display the table data here */}
+          <pre>{JSON.stringify(tableData, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const frames = {
   Frame1,
   Frame2,
@@ -416,6 +471,7 @@ const frames = {
   Frame8,
   Frame9,
   Frame10,
+  Frame11,
 };
 
 export default frames;

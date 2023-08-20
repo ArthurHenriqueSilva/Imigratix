@@ -43,6 +43,10 @@ const Dashboard = () => {
       <div className="form-frames">
         <frames.Frame10 />
       </div>
+
+      <div className="form-frames">
+        <frames.Frame11 />
+      </div>
     </div>
   );
 };
