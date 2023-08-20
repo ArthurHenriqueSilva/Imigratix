@@ -3,11 +3,6 @@ import pathlib
 from flask_cors import CORS
 from flask import Flask, abort, redirect, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
-from google.oauth2 import id_token
-from google_auth_oauthlib.flow import Flow
-from pip._vendor import cachecontrol
-import google.auth.transport.requests
-import requests
 from aux_data import estados
 
 app = Flask(__name__)  # create Flask app
@@ -19,77 +14,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 from models import Registro, Residente, Provisorio, Temporario, Fronteirico, Pais, UF
 
-#----------- AUTENTICAÇÃO -------------------
-# Configuração do OAuth para Google
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # Permite o uso de http para testes
-app.secret_key = "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"
-
-GOOGLE_CLIENT_ID = "267501760155-olb9g1g3nf8itdl778fp1241448nb1dc.apps.googleusercontent.com"
-client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
-
-# Configurações para o OAuth do Google
-flow = Flow.from_client_secrets_file(
-    client_secrets_file=client_secrets_file,
-    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-    redirect_uri="http://localhost/api/auth/google/callback"
-)
-
-def login_is_required(function):
-    def wrapper(*args, **kwargs):
-        if "google_id" not in session:
-            return abort(401) # Unauthorized
-        else:
-            return function()
-    return wrapper
-
-@app.route("/api/auth/google/login")
-def login_google():
-    authorization_url, state = flow.authorization_url()
-    session["state"] = state
-    return redirect(authorization_url)
-
-@app.route("/api/auth/google/callback")
-def callback_google():
-    flow.fetch_token(authorization_response=request.url)
-
-    if not session["state"] == request.args["state"]:
-        abort(500) #estado inválido, login não autorizado
-    
-    credentials = flow.credentials
-    request_session = requests.session()
-    cached_session = cachecontrol.CacheControl(request_session)
-    token_request = google.auth.transport.requests.Request(session=cached_session)
-
-    id_info = id_token.verify_oauth2_token(
-        id_token=credentials._id_token,
-        request=token_request,
-        audience=GOOGLE_CLIENT_ID
-    )
-
-    session["google_id"] = id_info.get("sub")
-    session["name"] = id_info.get("name")
-    return redirect("/home")
-
-@app.route("/auth/google/logout")
-def logout_google():
-    session.clear()
-    return redirect("/login")
-
 #----------- FUNÇÕES PARA IP ----------------
 def get_request_ip(request):
     return jsonify({'ip': request.remote_addr}), 200
 
-def get_locations(ip):
+@app.route('/api/ip', methods=['POST'])
+def get_locations():
+    ip = request.json.get('ip')  # Assuming the JSON sent contains an "ip" field
     response = request.get('http://ip-api.com/json/' + ip).json()
-    return {
-        'continent': response['continent'],
-        'country': response['country'],
-        'region': response['regionName'],
-        'city': response['city'],
-        'lat': response['lat'],
-        'lon': response['lon'],
-        'zip': response['zip']
-    }
+    return jsonify(response)
 
 # ---------- Funções Aux DA API -------------
 # Cadastro de Imigrante Residente
@@ -286,7 +219,6 @@ def consulta_classificacao_pais_tempo(pais_filtro, mes_filtro):
 #Rota 1
 
 @app.route('/api/distribuicao-de-imigrantes-pelo-pais', methods=['POST'])
-@login_is_required
 def distribuicao_imigrantes_pais():
     pais_filtro = request.form.get('pais')
     distribuicao = consulta_distribuicao_imigrantes_pais(pais_filtro)

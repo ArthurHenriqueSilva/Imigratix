@@ -23,19 +23,15 @@ def verify_password(usuario, senha):
 
 CORS(app)
 
-@app.route('/auth/google')
-def auth_google():
-    response = requests.post('http://localhost:80/api/auth/google/login')
+@app.route('/client', methods=['POST'])
+def proxy_client():
+    response = requests.post('http://localhost:80/api/ip', json=request.json)
+    
     if response.status_code == 200:
         result = response.json()
-        return result
+        return jsonify(result)
     else:
-        return jsonify( {'erro':'Erro ao autenticar usuário'})
-
-@app.route('/client')
-def proxy_client():
-    ip_addr = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
-    return '<h1> Seu endereço de IP é:' + ip_addr
+        return 'Erro ao obter informações de IP'
 
 # q1
 @app.route('/distribuicao_imigrantes_pais', methods=['POST'])
