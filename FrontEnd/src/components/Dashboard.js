@@ -1,5 +1,5 @@
-import React from 'react';
-import frames from './components';
+import React from "react";
+import frames from "./components";
 
 const Dashboard = () => {
   return (

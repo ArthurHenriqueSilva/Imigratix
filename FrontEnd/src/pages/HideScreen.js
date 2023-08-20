@@ -1,9 +1,8 @@
 import React from "react";
-import Dashboard from "../components/Dashboard";
 import AppSummary from "../components/AppSummary";
 import logo from "../assets/logo.png";
 
-const Home = () => {
+const HideScreen = () => {
   return (
     <div>
       <header>
@@ -11,12 +10,12 @@ const Home = () => {
       </header>
       <div className="content">
         <AppSummary />
-        <div className="dashboard">
-          <Dashboard />
+        <div>
+          <h2>Hide Screen</h2>
         </div>
       </div>
     </div>
   );
 };
 
-export default Home;
+export default HideScreen;

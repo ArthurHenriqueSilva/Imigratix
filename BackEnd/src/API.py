@@ -81,17 +81,11 @@ def logout_google():
 def get_request_ip(request):
     return jsonify({'ip': request.remote_addr}), 200
 
-def get_locations(ip):
+@app.route('/api/ip', methods=['POST'])
+def get_locations():
+    ip = request.json.get('ip')  # Assuming the JSON sent contains an "ip" field
     response = request.get('http://ip-api.com/json/' + ip).json()
-    return {
-        'continent': response['continent'],
-        'country': response['country'],
-        'region': response['regionName'],
-        'city': response['city'],
-        'lat': response['lat'],
-        'lon': response['lon'],
-        'zip': response['zip']
-    }
+    return jsonify(response)
 
 # ---------- Funções Aux DA API -------------
 # Cadastro de Imigrante Residente
@@ -287,7 +281,6 @@ def consulta_classificacao_pais_tempo(pais_filtro, mes_filtro):
 #Rota 1
 
 @app.route('/api/distribuicao-de-imigrantes-pelo-pais', methods=['POST'])
-@login_is_required
 def distribuicao_imigrantes_pais():
     pais_filtro = request.form.get('pais')
     distribuicao = consulta_distribuicao_imigrantes_pais(pais_filtro)
