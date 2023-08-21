@@ -1,5 +1,5 @@
-import React from "react";
-import frames from "./components";
+import React from 'react';
+import frames from './components';
 
 const Dashboard = () => {
   return (
@@ -42,10 +42,6 @@ const Dashboard = () => {
 
       <div className="form-frames">
         <frames.Frame10 />
-      </div>
-
-      <div className="form-frames">
-        <frames.Frame11 />
       </div>
     </div>
   );

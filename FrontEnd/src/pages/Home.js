@@ -1,7 +1,7 @@
-import React from "react";
-import Dashboard from "../components/Dashboard";
-import AppSummary from "../components/AppSummary";
-import logo from "../assets/logo.png";
+import React from 'react';
+import Dashboard from '../components/Dashboard';
+import AppSummary from '../components/AppSummary';
+import logo from '../assets/logo.png';
 
 const Home = () => {
   return (

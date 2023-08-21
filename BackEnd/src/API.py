@@ -3,7 +3,6 @@ import pathlib
 from flask_cors import CORS
 from flask import Flask, abort, redirect, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
@@ -38,8 +37,7 @@ flow = Flow.from_client_secrets_file(
 def login_is_required(function):
     def wrapper(*args, **kwargs):
         if "google_id" not in session:
-            return function()
-            # return abort(401) # Unauthorized
+            return abort(401) # Unauthorized
         else:
             return function()
     return wrapper
@@ -81,11 +79,17 @@ def logout_google():
 def get_request_ip(request):
     return jsonify({'ip': request.remote_addr}), 200
 
-@app.route('/api/ip', methods=['POST'])
-def get_locations():
-    ip = request.json.get('ip')  # Assuming the JSON sent contains an "ip" field
+def get_locations(ip):
     response = request.get('http://ip-api.com/json/' + ip).json()
-    return jsonify(response)
+    return {
+        'continent': response['continent'],
+        'country': response['country'],
+        'region': response['regionName'],
+        'city': response['city'],
+        'lat': response['lat'],
+        'lon': response['lon'],
+        'zip': response['zip']
+    }
 
 # ---------- Funções Aux DA API -------------
 # Cadastro de Imigrante Residente
@@ -144,7 +148,8 @@ def consulta_distribuicao_imigrantes_pais(pais_filtro):
             .filter(Registro.pais == pais_filtro) \
             .group_by(Registro.classificacao)\
             .all()
-        return dict(distribuicao)
+
+        return dict(sorted(distribuicao, key=lambda tup: tup[1]))
     
 #2: Consulta de qual país com mais imigração entre os meses x e y
 
@@ -277,13 +282,15 @@ def consulta_classificacao_pais_tempo(pais_filtro, mes_filtro):
 
         return str(registros.classificacao)
 
-    
+
 #Rota 1
 
 @app.route('/api/distribuicao-de-imigrantes-pelo-pais', methods=['POST'])
+@login_is_required
 def distribuicao_imigrantes_pais():
     pais_filtro = request.form.get('pais')
     distribuicao = consulta_distribuicao_imigrantes_pais(pais_filtro)
+    print(distribuicao)
     return jsonify({'pais' : pais_filtro, 'Total_Fronteirico': distribuicao.get('Fronteiriço', 0), 'Total_Provisorio': distribuicao.get('Provisório', 0), 'Total_Residente': distribuicao.get('Residente', 0), 'Total_Temporario': distribuicao.get('Temporário', 0)})
 
 #Rota 2
@@ -362,29 +369,4 @@ def classificacao_pais_tempo():
     classificacao_popular = consulta_classificacao_pais_tempo(pais_filtro, mes_filtro)
     return jsonify({'pais': pais_filtro, 'mes': mes_filtro, 'classificacao': classificacao_popular})
 
-
-
-#rota 11
-
 # ------------- ROTAS DA API -------------
-
-
-
-# ------------- Tabelas completas pela API -------------
-
-
-@app.route('/api/tabela_completa', methods=['POST'])
-def tabela_completa():
-    tabela_alvo = request.json.get('tabela')
-    tabela_alvo = f'PUBLIC."{tabela_alvo}"'
-
-    # Consulta a tabela diretamente
-    query = f"SELECT * FROM {tabela_alvo}"
-    resultados = db.session.execute(text(query))
-    print(resultados.keys())
-    print(resultados)
-
-    # Transforma os resultados em uma lista de dicionários
-    # tabela_data = [dict(row.items()) for row in resultados]
-    
-    # return jsonify(resultados)

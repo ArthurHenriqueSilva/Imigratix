@@ -1,33 +1,32 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
 
-import "../styles/style.css";
+import '../styles/style.css';
 
 const Frame1 = () => {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
     const formData = new URLSearchParams();
     formData.append(
-      "pais_filtro_distribuicao_imigrantes_pais",
+      'pais_filtro_distribuicao_imigrantes_pais',
       event.target.pais_filtro_distribuicao_imigrantes_pais.value
     );
 
     const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData,
     };
 
     setLoading(true);
-    fetch("http://localhost:80/distribuicao_imigrantes_pais", requestOptions)
+    fetch('http://localhost:5000/distribuicao_imigrantes_pais', requestOptions)
       .then((res) => {
         if (!res.ok) {
-          throw new Error("Erro na solicitação");
+          throw new Error('Erro na solicitação');
         }
         return res.json();
       })
@@ -35,22 +34,22 @@ const Frame1 = () => {
         // Formatando os dados para retirar o prefixo "Total_"
         const formattedData = {};
         for (const [key, value] of Object.entries(data)) {
-          if (key !== "pais") {
-            const formattedKey = key.replace("Total_", "");
+          if (key !== 'pais') {
+            const formattedKey = key.replace('Total_', '');
             formattedData[formattedKey] = value;
           }
         }
-        formattedData["pais"] = data.pais;
+        formattedData['pais'] = data.pais;
         setData(formattedData);
-        setError("");
+        setError('');
         setLoading(false);
-        console.log("Dados recebidos da API para Q1", data);
+        console.log('Dados recebidos da API para Q1', data);
       })
       .catch((error) => {
         console.error(error);
         setData({});
         setError(
-          "Erro ao obter a distribuição de imigrantes do país escolhido."
+          'Erro ao obter a distribuição de imigrantes do país escolhido.'
         );
         setLoading(false);
       });
@@ -59,7 +58,7 @@ const Frame1 = () => {
   // Manipulador de evento para o botão de "Reset"
   const handleReset = () => {
     setData({});
-    setError("");
+    setError('');
   };
 
   return (
@@ -95,7 +94,7 @@ const Frame1 = () => {
               </thead>
               <tbody>
                 {Object.entries(data).map(([key, value]) => {
-                  if (key !== "pais") {
+                  if (key !== 'pais') {
                     return (
                       <tr key={key}>
                         <td>{key}</td>
@@ -221,7 +220,7 @@ const Frame4 = () => {
       <h1>Mês com maior quantidade de registros de imigrantes do tipo</h1>
       <form action="/periodo_popular_tipo" method="post">
         <label htmlFor="tipo_filtro_periodo_popular">
-          Tipo para filtragem:{" "}
+          Tipo para filtragem:{' '}
         </label>
         <select name="tipo_filtro_periodo_popular">
           <option value="Fronteiriço">Fronteiriço</option>
@@ -244,12 +243,12 @@ const Frame5 = () => {
       <h1>Mês no qual esse Estado recebeu mais imigrantes do tipo</h1>
       <form action="/mes_popular_estado" method="post">
         <label htmlFor="estado_filtro_mes_popular_estado">
-          Estado para filtragem:{" "}
+          Estado para filtragem:{' '}
         </label>
         <input type="text" name="estado_filtro_mes_popular_estado" />
 
         <label htmlFor="classificacao_filtro_mes_popular_estado">
-          Tipo para filtragem:{" "}
+          Tipo para filtragem:{' '}
         </label>
         <select name="classificacao_filtro_mes_popular_estado">
           <option value="Fronteiriço">Fronteiriço</option>
@@ -303,7 +302,7 @@ const Frame7 = () => {
       <h1>Estado com mais imigrantes vindos de</h1>
       <form action="/estado_mais_imigrantes" method="post">
         <label htmlFor="pais_filtro_estado_mais_imigrantes">
-          Pais para filtragem:{" "}
+          Pais para filtragem:{' '}
         </label>
         <input type="text" name="pais_filtro_estado_mais_imigrantes" />
 
@@ -321,7 +320,7 @@ const Frame8 = () => {
       <h1>Tipo de imigrante mais comum vindo de</h1>
       <form action="/tipo_imigrante_pais" method="post">
         <label htmlFor="pais_filtro_tipo_imigrante_pais">
-          Pais para filtragem:{" "}
+          Pais para filtragem:{' '}
         </label>
         <input type="text" name="pais_filtro_tipo_imigrante_pais" />
 
@@ -339,9 +338,9 @@ const Frame9 = () => {
       <h1>Quantidade de imigrantes desse país no mês de</h1>
       <form action="/quantidade_pais_maior_periodo_imigracao" method="post">
         <label htmlFor="pais_filtro_pais_imigracao_periodo_popular">
-          Pais para filtragem:{" "}
+          Pais para filtragem:{' '}
         </label>
-        <input type="text" name="pais_filtro_pais_imigracao_periodo_popular" />{" "}
+        <input type="text" name="pais_filtro_pais_imigracao_periodo_popular" />{' '}
         <br />
         <label htmlFor="mes_filtro_pais_imigracao_periodo_popular">
           Mês para filtragem
@@ -374,12 +373,12 @@ const Frame10 = () => {
       <h1>Tipo mais recorrente de imigrante desse país no mês de</h1>
       <form action="/classificacao_imigracao_mais_popular_mes" method="post">
         <label htmlFor="pais_filtro_classificacao_imigracao_mais_popular_mes">
-          Pais para filtragem:{" "}
+          Pais para filtragem:{' '}
         </label>
         <input
           type="text"
           name="pais_filtro_classificacao_imigracao_mais_popular_mes"
-        />{" "}
+        />{' '}
         <br />
         <label htmlFor="mes_filtro_classificacao_pais_tempo">
           Mês para filtragem
@@ -406,60 +405,6 @@ const Frame10 = () => {
   );
 };
 
-const Frame11 = () => {
-  const availableTables = [
-    "Registro",
-    "UF",
-    "Fronteirico",
-    "Residente",
-    "Temporario",
-    "Provisorio",
-    "Pais",
-  ];
-
-  const [tableData, setTableData] = useState(null);
-
-  const handleTableButtonClick = async (tableName) => {
-    try {
-      const response = await axios.post(
-        "http://localhost:80/api/tabela_completa",
-        {
-          tabela: tableName,
-        }
-      );
-      const data = response.data;
-      setTableData(data);
-    } catch (error) {
-      console.error("Error fetching table data:", error);
-    }
-  };
-
-  return (
-    <div>
-      <h1>Visão integral de tabela</h1>
-      <div>
-        <p>Selecione a tabela a exibir:</p>
-        {availableTables.map((tableName) => (
-          <button
-            key={tableName}
-            className="table_button"
-            onClick={() => handleTableButtonClick(tableName)}
-          >
-            {tableName}
-          </button>
-        ))}
-      </div>
-      {tableData && (
-        <div>
-          <h2>Tabela: {tableData.tabela}</h2>
-          {/* Display the table data here */}
-          <pre>{JSON.stringify(tableData, null, 2)}</pre>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const frames = {
   Frame1,
   Frame2,
@@ -471,7 +416,6 @@ const frames = {
   Frame8,
   Frame9,
   Frame10,
-  Frame11,
 };
 
 export default frames;
