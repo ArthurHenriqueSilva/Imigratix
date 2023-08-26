@@ -18,6 +18,29 @@ class Registro(db.Model):
         self.qtd = qtd
         self.mes = mes
 
+class usuario(db.Model):
+    __tablename__ = "usuario"
+    login = db.Column(db.String(50), primary_key=True)
+    password = db.Column(db.String(50))
+
+    def __init__(self, login, password):
+        self.login = login
+        self.password = password
+
+class ip(db.Model):
+    __tablename__ = "ip"
+    ip = db.Column(db.String(50), primary_key=True)
+    continente = db.Column(db.String(50))
+    pais = db.Column(db.String(50))
+    estado = db.Column(db.String(50))
+    cidade = db.Column(db.String(50))
+
+    def __init__(self, ip, continente, pais, estado, cidade):
+        self.ip = ip
+        self.continente = continente
+        self.pais = pais
+        self.estado = estado
+        self.cidade = cidade
 
 class Residente(db.Model):
     __tablename__ = 'Residente'

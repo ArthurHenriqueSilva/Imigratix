@@ -43,6 +43,7 @@ def func_distribuicao_imigrantes_pais():
     print(request.form)
     pais_filtro = request.form['pais_filtro_distribuicao_imigrantes_pais']
     data = {'pais': pais_filtro}
+    
     response = requests.post('http://localhost:80/api/distribuicao-de-imigrantes-pelo-pais', data=data)
     if response.status_code == 200:
         result = response.json()
@@ -169,4 +170,4 @@ def func_classificacao_pais_tempo():
         return 'Erro ao obter a classificação mais recorrente no mês especificado advindos do país escolhido.'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80,debug=True)
+    app.run(host='0.0.0.0', port=80)

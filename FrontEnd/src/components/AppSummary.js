@@ -1,8 +1,10 @@
-import React from 'react';
-import Slider from 'react-slick';
-
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import React from "react";
+import Slider from "react-slick";
+import ChartComponent from "./chartComponent";
+import HeatmapMap from "./mapaCalor";
+import "../styles/style.css";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const AppSummary = () => {
   const sliderSettings = {
@@ -11,22 +13,21 @@ const AppSummary = () => {
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    arrows: false,
   };
 
   return (
     <section className="appSummary">
-      <Slider {...sliderSettings}>
-        <div>
+      <Slider {...sliderSettings} className="slider-custom">
+        <div className="resumeData">
           <h2>Resumo do Aplicativo</h2>
           <p>
-            Este aplicativo permite que você tenha{' '}
+            Este aplicativo permite que você tenha{" "}
             <strong>
               <u>
                 acesso aos números de 2022 referentes aos dados de imigração da
                 Polícia Federal
               </u>
-            </strong>{' '}
+            </strong>{" "}
             .
           </p>
           <p>
@@ -106,46 +107,11 @@ const AppSummary = () => {
           </table>
           <div className="clear"></div>
         </div>
-
         <div className="resumeData">
-          <h2>Desenvolvedores</h2>
-          <table className="floatleft">
-            <thead>
-              <tr>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Dev 0</td>
-              </tr>
-            </tbody>
-          </table>
-          <table className="floatleft">
-            <thead>
-              <tr>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Dev 1</td>
-              </tr>
-            </tbody>
-          </table>
-          <table className="floatleft">
-            <thead>
-              <tr>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Dev 2</td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="clear"></div>
+          <ChartComponent />
+        </div>
+        <div className="resumeData">
+          <HeatmapMap />
         </div>
       </Slider>
     </section>

@@ -1,39 +1,71 @@
-import React from 'react';
-import '../styles/Login.css';
-import logo from '../assets/logo.png';
-import '@fortawesome/fontawesome-free/css/all.css';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate
+import "../styles/Login.css";
+import logo from "../assets/logo.png";
+import "@fortawesome/fontawesome-free/css/all.css";
 
 const Login = () => {
-  const handleGoogleLogin = async () => {
-    try {
-      const response = await fetch('http://localhost:80/api/auth/google/login');
-      console.log(response);
-      const data = await response.json();
+  const [loginResult, setLoginResult] = useState(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
-      if (data.success) {
-        window.location.href = '/Home';
-      }
-    } catch (error) {
-      console.error('Erro ao autenticar com o Google:', error);
-    }
-  };
+  const handleLogin = (event) => {
+    event.preventDefault();
+    const login = event.target.login.value;
+    const password = event.target.password.value;
+    const formData = new URLSearchParams();
+    formData.append("login", login);
+    formData.append("password", password);
+    const requestOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login, password }),
+    };
 
-  const handleFacebookLogin = async () => {
-    console.log('Autenticando com Facebook...');
+    fetch("http://localhost:80/api/login", requestOptions)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Erro na solicitação");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setLoginResult(data);
+        console.log(data);
+
+        if (data.result === true) {
+          navigate("/"); // Redirect to the Home page
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoginResult({ result: "false", status: "500" });
+      });
   };
 
   return (
     <div className="login-container">
       <div className="login-box">
-        <img className="logo" src={logo} alt="Logo"></img>
+        <img className="logo" src={logo} alt="Logo" />
         <h1 className="faca-login">Faça login</h1>
-        <div className="login-buttons">
-          <button onClick={handleGoogleLogin} className="google-button">
-            <i className="fab fa-google"></i> Logar com Google
-          </button>
-          <button onClick={handleFacebookLogin} className="facebook-button">
-            <i className="fab fa-facebook"></i> Logar com Facebook
-          </button>
+        <div className="login-form">
+          <form onSubmit={handleLogin}>
+            <input type="text" placeholder="Nome de usuário" name="login" />
+            <input type="password" placeholder="Senha" name="password" />
+            <button className="local-login-button">Entrar</button>
+            <Link to="/Sign" className="links-login">
+              Não possui Cadastro ?
+            </Link>
+            <Link to="/" className="links-login">
+              Voltar para a página inicial
+            </Link>
+          </form>
+          {loginResult && (
+            <p className={loginResult.result === true ? "success" : "error"}>
+              {loginResult.result === true
+                ? "Login bem sucedido!"
+                : "Erro ao fazer login. Por favor, verifique suas credenciais."}
+            </p>
+          )}
         </div>
       </div>
     </div>

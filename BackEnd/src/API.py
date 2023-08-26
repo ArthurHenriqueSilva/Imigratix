@@ -1,14 +1,8 @@
-import os
-import pathlib
 from flask_cors import CORS
-from flask import Flask, abort, redirect, request, jsonify, session
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from google.oauth2 import id_token
-from google_auth_oauthlib.flow import Flow
-from pip._vendor import cachecontrol
-import google.auth.transport.requests
-import requests
 from aux_data import estados
+from sqlalchemy import exc,func
 
 app = Flask(__name__)  # create Flask app
 CORS(app)
@@ -17,70 +11,14 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:chaveacesso@db-instance-prog-web.cuokvhdjyvdp.us-east-1.rds.amazonaws.com/Database_SISMIGRA'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-from models import Registro, Residente, Provisorio, Temporario, Fronteirico, Pais, UF
-
-#----------- AUTENTICAÇÃO -------------------
-# Configuração do OAuth para Google
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # Permite o uso de http para testes
-app.secret_key = "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"
-
-GOOGLE_CLIENT_ID = "267501760155-olb9g1g3nf8itdl778fp1241448nb1dc.apps.googleusercontent.com"
-client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
-
-# Configurações para o OAuth do Google
-flow = Flow.from_client_secrets_file(
-    client_secrets_file=client_secrets_file,
-    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
-    redirect_uri="http://localhost/api/auth/google/callback"
-)
-
-def login_is_required(function):
-    def wrapper(*args, **kwargs):
-        if "google_id" not in session:
-            return abort(401) # Unauthorized
-        else:
-            return function()
-    return wrapper
-
-@app.route("/api/auth/google/login")
-def login_google():
-    authorization_url, state = flow.authorization_url()
-    session["state"] = state
-    return redirect(authorization_url)
-
-@app.route("/api/auth/google/callback")
-def callback_google():
-    flow.fetch_token(authorization_response=request.url)
-
-    if not session["state"] == request.args["state"]:
-        abort(500) #estado inválido, login não autorizado
-    
-    credentials = flow.credentials
-    request_session = requests.session()
-    cached_session = cachecontrol.CacheControl(request_session)
-    token_request = google.auth.transport.requests.Request(session=cached_session)
-
-    id_info = id_token.verify_oauth2_token(
-        id_token=credentials._id_token,
-        request=token_request,
-        audience=GOOGLE_CLIENT_ID
-    )
-
-    session["google_id"] = id_info.get("sub")
-    session["name"] = id_info.get("name")
-    return redirect("/home")
-
-@app.route("/auth/google/logout")
-def logout_google():
-    session.clear()
-    return redirect("/login")
+from models import *
 
 #----------- FUNÇÕES PARA IP ----------------
 def get_request_ip(request):
-    return jsonify({'ip': request.remote_addr}), 200
+    return {'ip': request.environ['REMOTE_ADDR']}, 200
 
 def get_locations(ip):
-    response = request.get('http://ip-api.com/json/' + ip).json()
+    response = request.args.get('http://ip-api.com/json/' + ip).json()
     return {
         'continent': response['continent'],
         'country': response['country'],
@@ -90,7 +28,102 @@ def get_locations(ip):
         'lon': response['lon'],
         'zip': response['zip']
     }
+#-----------Funções Aux do Login-------------
 
+def insert_user(login, password):
+    new_user = usuario(login, password)
+    db.session.add(new_user)
+    try:
+        db.session.commit()
+        print("Usuario inserido com sucesso.")
+        return 201  # Código de status HTTP 201 Created
+    except exc.IntegrityError:
+        db.session.rollback()
+        print("Usuario já existe, não foi inserido.")
+        return 409  # Código de status HTTP 409 Conflict
+        
+def check_user(login, password):
+    try:
+        user = usuario.query.filter_by(login=login, password=password).first()
+        if user:
+            print(user)
+            return True, 200
+        else:
+            return False, 401
+    except Exception as e:
+        print(f"Erro ao verificar o usuário: {e}")
+        return False, 500
+    
+def insert_ip(ip_address, continente, pais, estado, cidade):
+    novo_ip = ip(ip=ip_address, continente=continente, pais=pais, estado=estado, cidade=cidade)
+    db.session.add(novo_ip)
+
+    try:
+        db.session.commit()
+        print("IP inserido com sucesso.")
+        return 201  # Código de status HTTP 201 Created
+    except exc.IntegrityError:
+        db.session.rollback()
+        print("IP já existe, não foi inserido.")
+        return 409  # Código de status HTTP 409 Conflict
+
+def get_ip_table():
+    results = []
+    ips = ip.query.all()
+    for ip in ips:
+        result = {
+            'ip': ip.ip,
+            'continente': ip.continente,
+            'pais': ip.pais,
+            'estado': ip.estado,
+            'cidade': ip.cidade
+        }
+        results.append(result)
+        
+    return results
+
+def get_ip_count_by_state():
+    try:
+        result = db.session.query(ip.estado, func.count(ip.ip)).group_by(ip.estado).all()
+        state_counts = [{"estado": estado, "quantidade": quantidade} for estado, quantidade in result]
+        return state_counts, 200
+    except exc.SQLAlchemyError as e:
+        print("Erro ao verificar:", str(e))
+        return []
+#ROTAS ---------------------------------------
+@app.route('/api/login', methods=['POST'])
+def login():
+    login = request.json.get('login')
+    password = request.json.get('password')
+    result, status = check_user(login, password)
+    print(result,status)
+    if result:
+        return jsonify({'result': result, 'status': status})
+    else:
+        return jsonify({'result': result, 'status': status})
+    
+@app.route('/api/insert-user', methods=['POST'])
+def insert_user_route():
+    login = request.json.get('login')
+    password = request.json.get('password')
+    status = insert_user(login, password)
+    return jsonify({'status': status})
+
+@app.route('/api/insert-ip', methods=['POST'])
+def insert_ip_route():
+    ip_address = request.json.get('ip')
+    continente = request.json.get('continente')
+    pais = request.json.get('pais')
+    estado = request.json.get('estado')
+    cidade = request.json.get('cidade')
+    status = insert_ip(ip_address, continente, pais, estado, cidade)
+    return jsonify({'status': status})
+
+@app.route('/api/get-ip-count-by-state', methods=['POST'])
+def get_ip_count_by_state_route():
+    results = get_ip_count_by_state()
+    return jsonify(results)
+        
 # ---------- Funções Aux DA API -------------
 # Cadastro de Imigrante Residente
 def cadastrar_residente(uf, pais, qtd):
@@ -286,11 +319,18 @@ def consulta_classificacao_pais_tempo(pais_filtro, mes_filtro):
 #Rota 1
 
 @app.route('/api/distribuicao-de-imigrantes-pelo-pais', methods=['POST'])
-@login_is_required
+#@login_is_required
 def distribuicao_imigrantes_pais():
     pais_filtro = request.form.get('pais')
     distribuicao = consulta_distribuicao_imigrantes_pais(pais_filtro)
+    dict_ip = get_request_ip(request)[0]
+
+    print(dict_ip)
+    # informations = get_locations(dict_ip['ip'])
+
     print(distribuicao)
+    # return jsonify({'info-ip': informations, 'pais' : pais_filtro, 'Total_Fronteirico': distribuicao.get('Fronteiriço', 0), 'Total_Provisorio': distribuicao.get('Provisório', 0), 'Total_Residente': distribuicao.get('Residente', 0), 'Total_Temporario': distribuicao.get('Temporário', 0)})
+
     return jsonify({'pais' : pais_filtro, 'Total_Fronteirico': distribuicao.get('Fronteiriço', 0), 'Total_Provisorio': distribuicao.get('Provisório', 0), 'Total_Residente': distribuicao.get('Residente', 0), 'Total_Temporario': distribuicao.get('Temporário', 0)})
 
 #Rota 2

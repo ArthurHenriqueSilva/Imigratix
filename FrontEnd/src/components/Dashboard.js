@@ -1,6 +1,6 @@
-import React from 'react';
-import frames from './components';
-
+import React from "react";
+import frames from "./components";
+import logo from "../assets/logo.png";
 const Dashboard = () => {
   return (
     <div className="container">
@@ -42,6 +42,9 @@ const Dashboard = () => {
 
       <div className="form-frames">
         <frames.Frame10 />
+      </div>
+      <div className="form-frames-2">
+        <img src={logo} alt="IMIGRATIX" className="centered-image" />
       </div>
     </div>
   );
