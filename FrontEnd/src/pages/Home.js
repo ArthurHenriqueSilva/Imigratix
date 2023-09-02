@@ -3,13 +3,18 @@ import { Link, Route, Routes } from "react-router-dom";
 import Dashboard from "../components/Dashboard";
 import AppSummary from "../components/AppSummary";
 import Login from "./Login";
+import { useUserContext } from "../components/UserContext";
 import logo from "../assets/logo.png";
 
 const Home = () => {
+  const { userName } = useUserContext();
   return (
     <div>
       <header className="header">
         <img className="logo" src={logo} alt="Logo" />
+        <div>
+          {userName ? <h2>Olá, {userName}</h2> : <h2>Olá, Visitante.</h2>}
+        </div>
         <Link to="/login" className="login-button">
           Login
         </Link>

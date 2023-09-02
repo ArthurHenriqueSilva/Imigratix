@@ -1,0 +1,14 @@
+# Arquivos temporários
+.DS_Store
+Thumbs.db
+
+# Arquivos de construção
+build/
+dist/
+
+# Dependências
+node_modules/
+
+# Arquivos de cache
+.cache/
+.npm/

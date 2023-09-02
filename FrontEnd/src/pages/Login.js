@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; // Import Link and useNavigate
 import "../styles/Login.css";
+import { useUserContext } from "../components/UserContext";
 import logo from "../assets/logo.png";
 import "@fortawesome/fontawesome-free/css/all.css";
 
 const Login = () => {
   const [loginResult, setLoginResult] = useState(null);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const { updateUser } = useUserContext();
 
   const handleLogin = (event) => {
     event.preventDefault();
@@ -33,7 +35,8 @@ const Login = () => {
         console.log(data);
 
         if (data.result === true) {
-          navigate("/"); // Redirect to the Home page
+          updateUser(login);
+          navigate("/");
         }
       })
       .catch((error) => {
