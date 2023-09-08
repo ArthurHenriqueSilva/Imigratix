@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 import "../styles/style.css";
 
@@ -6,9 +7,32 @@ const Frame1 = () => {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const [suggestedCountries, setSuggestedCountries] = useState([]);
+  useEffect(() => {
+    if (inputValue) {
+      axios
+        .get(`https://restcountries.com/v3.1/name/${inputValue}`)
+        .then((response) => {
+          const suggestions = response.data.map((country) => {
+            return {
+              name: country.name.common,
+              flag: country.flags.png,
+            };
+          });
+          setSuggestedCountries(suggestions);
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar países sugeridos:", error);
+        });
+    } else {
+      setSuggestedCountries([]);
+    }
+  }, [inputValue]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    setSuggestedCountries([]);
 
     const formData = new URLSearchParams();
     formData.append(
@@ -55,10 +79,16 @@ const Frame1 = () => {
       });
   };
 
-  // Manipulador de evento para o botão de "Reset"
   const handleReset = () => {
     setData({});
     setError("");
+    setInputValue("");
+    setSuggestedCountries([]);
+  };
+
+  const handleCountryInputChange = (event) => {
+    const value = event.target.value;
+    setInputValue(value);
   };
 
   return (
@@ -69,7 +99,33 @@ const Frame1 = () => {
           <label htmlFor="pais_filtro_distribuicao_imigrantes_pais">
             País para filtragem:
           </label>
-          <input type="text" name="pais_filtro_distribuicao_imigrantes_pais" />
+          <input
+            type="text"
+            name="pais_filtro_distribuicao_imigrantes_pais"
+            autoComplete="off"
+            value={inputValue}
+            onChange={handleCountryInputChange}
+          />
+
+          {inputValue && (
+            <ul className="suggestions-list">
+              {suggestedCountries.map((country, index) => (
+                <li
+                  key={index}
+                  onClick={() => setInputValue(country.name)}
+                  className="suggestion-item"
+                >
+                  <img
+                    src={country.flag}
+                    alt={`Bandeira de ${country.name}`}
+                    className="flag-icon"
+                  />
+                  {country.name}
+                </li>
+              ))}
+            </ul>
+          )}
+
           {!loading && !error && (
             <button className="submit_button" type="submit">
               Enviar

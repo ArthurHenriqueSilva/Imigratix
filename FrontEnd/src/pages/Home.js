@@ -5,6 +5,7 @@ import AppSummary from "../components/AppSummary";
 import Login from "./Login";
 import { useUserContext } from "../components/UserContext";
 import logo from "../assets/logo.png";
+import "../styles/style.css";
 
 const Home = () => {
   const { userName } = useUserContext();
@@ -12,7 +13,7 @@ const Home = () => {
     <div>
       <header className="header">
         <img className="logo" src={logo} alt="Logo" />
-        <div>
+        <div className="HiUser">
           {userName ? <h2>Olá, {userName}</h2> : <h2>Olá, Visitante.</h2>}
         </div>
         <Link to="/login" className="login-button">

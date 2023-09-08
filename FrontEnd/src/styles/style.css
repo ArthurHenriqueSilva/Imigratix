@@ -56,6 +56,19 @@ body {
   width: 100px;
 }
 
+.HiUser {
+  background-color: #0056b3;
+  color: #fff;
+  border: 2px solid #007bff;
+  font-size: x-small;
+  padding: 5px 5px;
+  margin: 10px;
+  position: absolute;
+  text-decoration: none;
+  bottom: 0;
+  left: 0;
+}
+
 .faca-login {
   font-size: 24px;
   text-align: center;
@@ -229,6 +242,53 @@ body {
 .submit_button:hover,
 .reset_button:hover {
   background-color: #000050;
+}
+
+.resetButton {
+  border: 5px solid red;
+  position: relative;
+  bottom: 35px;
+  left: 60px;
+  width: fit-content;
+  color: #fff;
+  height: 100%;
+  padding: 2px 10px;
+  background-color: red;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.resetButton:hover {
+  color: red;
+  background-color: #fff;
+}
+
+.suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+  background-color: #f2f2f2;
+  color: black;
+}
+.flag-icon {
+  width: 20px;
+  margin-right: 10px;
 }
 
 .result {
