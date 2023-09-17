@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from aux_data import estados
 from sqlalchemy import exc,func
+from flask_caching import Cache
 
 app = Flask(__name__)  # create Flask app
 CORS(app)
@@ -10,6 +11,10 @@ CORS(app)
 # ----------- CONFIGURAÇÕES DO BANCO DE DADOS -------------
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:chaveacesso@db-instance-prog-web.cuokvhdjyvdp.us-east-1.rds.amazonaws.com/Database_SISMIGRA'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['CACHE_TYPE'] = 'simple'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 3600
+
+cache = Cache(app)
 db = SQLAlchemy(app)
 from models import *
 
@@ -184,8 +189,30 @@ def consulta_distribuicao_imigrantes_pais(pais_filtro):
 
         return dict(sorted(distribuicao, key=lambda tup: tup[1]))
     
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_distribuicao_imigrantes_pais(pais_filtro):
+    pais_filtro = pais_filtro.upper()
+    with app.app_context():
+        distribuicao = db.session.query(Registro.classificacao, db.func.sum(Registro.qtd).label('Total')) \
+            .filter(Registro.pais == pais_filtro) \
+            .group_by(Registro.classificacao)\
+            .all()
+
+        return dict(sorted(distribuicao, key=lambda tup: tup[1]))
+
 #2: Consulta de qual país com mais imigração entre os meses x e y
 
+def consulta_pais_imigracao(mes_inicial, mes_final):
+    with app.app_context():
+        pais = db.session.query(Registro.pais, db.func.sum(Registro.qtd).label('Total'))\
+                    .filter(Registro.mes.between(mes_inicial, mes_final))\
+                    .group_by(Registro.pais)\
+                    .order_by(db.desc('Total'))\
+                    .first()
+
+        return str(pais.pais), pais.Total
+    
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
 def consulta_pais_imigracao(mes_inicial, mes_final):
     with app.app_context():
         pais = db.session.query(Registro.pais, db.func.sum(Registro.qtd).label('Total'))\
@@ -208,6 +235,16 @@ def consulta_tipo_imigrante(mes_inicial, mes_final):
 
         return str(tipo.classificacao)
 
+@cache.cached(timeout=3600)  # Cache válido por 1 hora    
+def consulta_tipo_imigrante(mes_inicial, mes_final):
+    with app.app_context():
+        tipo = db.session.query(Registro.classificacao, db.func.sum(Registro.qtd).label('Total'))\
+                    .filter(Registro.mes.between(mes_inicial, mes_final))\
+                    .group_by(Registro.classificacao)\
+                    .order_by(db.desc('Total'))\
+                    .first()
+
+        return str(tipo.classificacao)
 #4: Consulta de qual é o período do ano que recebmos mais imigrantes do tipo X
 
 def consulta_periodo_popular(classificacao_filtro):
@@ -221,6 +258,19 @@ def consulta_periodo_popular(classificacao_filtro):
 
         return str(periodo.mes)
 
+@cache.cached(timeout=3600)  # Cache válido por 1 hora    
+def consulta_periodo_popular(classificacao_filtro):
+    classificacao_filtro = classificacao_filtro.capitalize()
+    with app.app_context():
+        periodo = db.session.query(Registro.mes, db.func.sum(Registro.qtd).label('Total'))\
+                    .filter(Registro.classificacao == classificacao_filtro)\
+                    .group_by(Registro.mes)\
+                    .order_by(db.desc('Total'))\
+                    .first()
+
+        return str(periodo.mes)
+
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
 def uf_nome_extenso(sigla):
     filtro = UF.query.filter_by(nome=sigla).first()
     nome_extenso_uf = filtro.nome_extenso
@@ -238,6 +288,16 @@ def consulta_mes_mais_atrativo(uf_filtro, classificacao_filtro):
         
     return registro
 
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_mes_mais_atrativo(uf_filtro, classificacao_filtro):
+    with app.app_context():
+        registro = db.session.query(Registro.mes, db.func.sum(Registro.qtd).label('Total'))\
+            .filter(Registro.uf == uf_filtro, Registro.classificacao == classificacao_filtro) \
+            .group_by(Registro.mes) \
+            .order_by(db.desc('Total')) \
+            .first()
+        
+    return registro
 
 # 6: Qual o estado que possui mais registros de imigrantes residentes no mes X?
 
@@ -251,10 +311,41 @@ def consulta_estado_mais_residentes(mes_filtro):
         nome_ext = uf_nome_extenso(str(estado.uf))
         return(nome_ext)
     
-
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_estado_mais_residentes_cache(mes_filtro):
+    with app.app_context():
+        estado = db.session.query(Residente.uf, db.func.count().label('Total')) \
+            .filter(Registro.mes == mes_filtro) \
+            .group_by(Residente.uf) \
+            .order_by(db.desc('Total')) \
+            .first()
+        nome_ext = uf_nome_extenso(str(estado.uf))
+        return nome_ext
+    
 # 7: Qual estado recebe mais imigrantes do país X?
 
 def consulta_estado_com_mais_imigrantes(pais_filtro):
+    pais_filtro = pais_filtro.upper()
+    with app.app_context():
+        # Filtrar os registros pelo país especificado
+        registros = Registro.query.filter_by(pais=pais_filtro).all()
+        
+        # Calcular a soma da coluna "QTD" para cada estado
+        soma_por_estado = {}
+        for registro in registros:
+            estado = registro.uf
+            soma_por_estado[estado] = soma_por_estado.get(estado, 0) + registro.qtd
+        
+        # Encontrar o estado com a maior soma
+        estado_mais_imigrantes = max(soma_por_estado, key=soma_por_estado.get)
+        
+        # Obter o nome completo do estado
+        nome_ext = uf_nome_extenso(estado_mais_imigrantes)
+        # Retornar o estado e a quantidade de imigrantes
+        return estado_mais_imigrantes, soma_por_estado[estado_mais_imigrantes]
+    
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_estado_com_mais_imigrantes_cache(pais_filtro):
     pais_filtro = pais_filtro.upper()
     with app.app_context():
         # Filtrar os registros pelo país especificado
@@ -288,6 +379,18 @@ def consulta_imigracao_recorrente_do_pais(pais_filtro):
         tipo_mais_recorrente = max(soma_por_tipo, key=soma_por_tipo.get)
         return str(tipo_mais_recorrente)
 
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_imigracao_recorrente_do_pais_cache(pais_filtro):
+    pais_filtro = pais_filtro.upper()
+    with app.app_context():
+        registros = Registro.query.filter_by(pais=pais_filtro).all()
+        soma_por_tipo = {}
+        for registro in registros:
+            tipo_imigraccao = registro.classificacao
+            soma_por_tipo[tipo_imigraccao] = soma_por_tipo.get(tipo_imigraccao, 0) + 1
+        
+        tipo_mais_recorrente = max(soma_por_tipo, key=soma_por_tipo.get)
+        return str(tipo_mais_recorrente)
 # 9: Qual a quantidade de imigrante do país no período de maior chegada de imigrantes no país?
 
 def consulta_quantidade_pais_periodo_popular(periodo_popular, pais_filtro):
@@ -301,6 +404,17 @@ def consulta_quantidade_pais_periodo_popular(periodo_popular, pais_filtro):
 
     return str(registros.Total)
 
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_quantidade_pais_periodo_popular_cache(periodo_popular, pais_filtro):
+    pais_filtro = pais_filtro.upper()
+    with app.app_context():
+        registros = db.session.query(Registro.pais, db.func.sum(Registro.qtd).label('Total')) \
+            .filter(Registro.pais == pais_filtro, Registro.mes == periodo_popular) \
+            .group_by(Registro.pais) \
+            .order_by(db.desc('Total')) \
+            .first()
+
+    return str(registros.Total)
 
 # 10: Qual a classificação do país X que mais recebemos no tempo Y?
 
@@ -315,7 +429,16 @@ def consulta_classificacao_pais_tempo(pais_filtro, mes_filtro):
 
         return str(registros.classificacao)
 
-
+@cache.cached(timeout=3600)  # Cache válido por 1 hora
+def consulta_classificacao_pais_tempo_cache(pais_filtro, mes_filtro):
+    pais_filtro = pais_filtro.upper()
+    with app.app_context():
+        registros = db.session.query(Registro.classificacao, db.func.sum(Registro.qtd).label('Total')) \
+                    .filter(Registro.pais == pais_filtro, Registro.mes == mes_filtro) \
+                    .group_by(Registro.classificacao) \
+                    .order_by(db.desc('Total')) \
+                    .first()
+        return str(registros.classificacao)
 #Rota 1
 
 @app.route('/api/distribuicao-de-imigrantes-pelo-pais', methods=['POST'])
@@ -366,10 +489,18 @@ def mes_mais_atrativo():
     return jsonify({'mes': str(registro.mes), 'uf': uf_filtro, 'classificacao': classificacao_filtro})
 
 #Rota 6
+# @app.route('/api/estado-com-mais-residentes-no-mes', methods=['POST'])
+# def estado_mais_residentes():
+#     mes_filtro = request.json.get('mes')
+#     estado_mais_residentes = consulta_estado_mais_residentes(mes_filtro=mes_filtro)
+#     estado_nome = estado_mais_residentes
+#     return jsonify({'estado': estado_nome, 'mes': mes_filtro})
+
+#Rota 6 com Cache
 @app.route('/api/estado-com-mais-residentes-no-mes', methods=['POST'])
 def estado_mais_residentes():
     mes_filtro = request.json.get('mes')
-    estado_mais_residentes = consulta_estado_mais_residentes(mes_filtro=mes_filtro)
+    estado_mais_residentes = consulta_estado_mais_residentes_cache(mes_filtro)
     estado_nome = estado_mais_residentes
     return jsonify({'estado': estado_nome, 'mes': mes_filtro})
 
