@@ -190,7 +190,7 @@ def consulta_distribuicao_imigrantes_pais(pais_filtro):
         return dict(sorted(distribuicao, key=lambda tup: tup[1]))
     
 @cache.cached(timeout=3600)  # Cache válido por 1 hora
-def consulta_distribuicao_imigrantes_pais(pais_filtro):
+def consulta_distribuicao_imigrantes_pais_cache(pais_filtro):
     pais_filtro = pais_filtro.upper()
     with app.app_context():
         distribuicao = db.session.query(Registro.classificacao, db.func.sum(Registro.qtd).label('Total')) \
@@ -213,7 +213,7 @@ def consulta_pais_imigracao(mes_inicial, mes_final):
         return str(pais.pais), pais.Total
     
 @cache.cached(timeout=3600)  # Cache válido por 1 hora
-def consulta_pais_imigracao(mes_inicial, mes_final):
+def consulta_pais_imigracao_cache(mes_inicial, mes_final):
     with app.app_context():
         pais = db.session.query(Registro.pais, db.func.sum(Registro.qtd).label('Total'))\
                     .filter(Registro.mes.between(mes_inicial, mes_final))\
@@ -236,7 +236,7 @@ def consulta_tipo_imigrante(mes_inicial, mes_final):
         return str(tipo.classificacao)
 
 @cache.cached(timeout=3600)  # Cache válido por 1 hora    
-def consulta_tipo_imigrante(mes_inicial, mes_final):
+def consulta_tipo_imigrante_cache(mes_inicial, mes_final):
     with app.app_context():
         tipo = db.session.query(Registro.classificacao, db.func.sum(Registro.qtd).label('Total'))\
                     .filter(Registro.mes.between(mes_inicial, mes_final))\
@@ -259,7 +259,7 @@ def consulta_periodo_popular(classificacao_filtro):
         return str(periodo.mes)
 
 @cache.cached(timeout=3600)  # Cache válido por 1 hora    
-def consulta_periodo_popular(classificacao_filtro):
+def consulta_periodo_popular_cache(classificacao_filtro):
     classificacao_filtro = classificacao_filtro.capitalize()
     with app.app_context():
         periodo = db.session.query(Registro.mes, db.func.sum(Registro.qtd).label('Total'))\
@@ -289,7 +289,7 @@ def consulta_mes_mais_atrativo(uf_filtro, classificacao_filtro):
     return registro
 
 @cache.cached(timeout=3600)  # Cache válido por 1 hora
-def consulta_mes_mais_atrativo(uf_filtro, classificacao_filtro):
+def consulta_mes_mais_atrativo_cache(uf_filtro, classificacao_filtro):
     with app.app_context():
         registro = db.session.query(Registro.mes, db.func.sum(Registro.qtd).label('Total'))\
             .filter(Registro.uf == uf_filtro, Registro.classificacao == classificacao_filtro) \
@@ -445,7 +445,7 @@ def consulta_classificacao_pais_tempo_cache(pais_filtro, mes_filtro):
 #@login_is_required
 def distribuicao_imigrantes_pais():
     pais_filtro = request.form.get('pais')
-    distribuicao = consulta_distribuicao_imigrantes_pais(pais_filtro)
+    distribuicao = consulta_distribuicao_imigrantes_pais_cache(pais_filtro)
     dict_ip = get_request_ip(request)[0]
 
     print(dict_ip)
@@ -460,21 +460,21 @@ def distribuicao_imigrantes_pais():
 @app.route('/api/pais-com-mais-imigracao-no-periodo', methods=['POST'])
 def pais_com_mais_imigracao():
     meses_filtro = [request.json.get('mes_inicial'), request.json.get('mes_final')]
-    pais, qtd_pais = consulta_pais_imigracao(mes_inicial=meses_filtro[0], mes_final=meses_filtro[1])
+    pais, qtd_pais = consulta_pais_imigracao_cache(mes_inicial=meses_filtro[0], mes_final=meses_filtro[1])
     return jsonify({'pais': pais, 'qtd_pais': qtd_pais, 'mes_inicial': meses_filtro[0], 'mes_final': meses_filtro[1]})
 
 #Rota 3
 @app.route('/api/tipo-de-imigracao-mais-popular-no-periodo', methods=['POST'])
 def tipo_imigracao_popular():
     meses_filtro = [request.json.get('mes_inicial'), request.json.get('mes_final')]
-    tipo = consulta_tipo_imigrante(mes_inicial=meses_filtro[0], mes_final=meses_filtro[1])
+    tipo = consulta_tipo_imigrante_cache(mes_inicial=meses_filtro[0], mes_final=meses_filtro[1])
     return jsonify({'tipo': tipo, 'mes_inicial': meses_filtro[0], 'mes_final': meses_filtro[1], 'pais': 'Brasil'})
 
 #Rota 4
 @app.route('/api/periodo-mais-popular-para-o-tipo', methods=['POST'])
 def periodo_popular():
     classificacao_filtro = request.json.get('classificacao')
-    periodo = consulta_periodo_popular(classificacao_filtro=classificacao_filtro)
+    periodo = consulta_periodo_popular_cache(classificacao_filtro=classificacao_filtro)
     return jsonify({'periodo': periodo, 'classificacao': classificacao_filtro})
 
 #Rota 5
@@ -483,7 +483,7 @@ def periodo_popular():
 def mes_mais_atrativo():
     uf_filtro = request.json.get('uf')
     classificacao_filtro = request.json.get('classificacao')
-    registro = consulta_mes_mais_atrativo(uf_filtro=uf_filtro, classificacao_filtro=classificacao_filtro)
+    registro = consulta_mes_mais_atrativo_cache(uf_filtro=uf_filtro, classificacao_filtro=classificacao_filtro)
     if registro is None:
         return jsonify({'mes': '0', 'uf': uf_filtro, 'classificacao': classificacao_filtro})
     return jsonify({'mes': str(registro.mes), 'uf': uf_filtro, 'classificacao': classificacao_filtro})
@@ -509,7 +509,7 @@ def estado_mais_residentes():
 @app.route('/api/estado-com-mais-imigrantes', methods=['POST'])
 def estado_mais_imigrantes():
     pais_filtro = request.json.get('pais')
-    estado_mais_imigrantes, qtd_estado = consulta_estado_com_mais_imigrantes(pais_filtro)
+    estado_mais_imigrantes, qtd_estado = consulta_estado_com_mais_imigrantes_cache(pais_filtro)
     estado_nome = estados[estado_mais_imigrantes]
     return jsonify({'estado': estado_nome, 'quantidade': qtd_estado, 'pais': pais_filtro})
 
@@ -518,7 +518,7 @@ def estado_mais_imigrantes():
 @app.route('/api/maior-tipo-imigrante-do-pais', methods=['POST'])
 def tipo_imigrante_pais():
     pais_filtro = request.json.get('pais')
-    tipo_imigrante = consulta_imigracao_recorrente_do_pais(pais_filtro)
+    tipo_imigrante = consulta_imigracao_recorrente_do_pais_cache(pais_filtro)
     return jsonify({'pais': pais_filtro, 'tipo': tipo_imigrante})
 
 #Rota 9
@@ -527,7 +527,7 @@ def tipo_imigrante_pais():
 def pais_imigracao_periodo_popular():
     pais_filtro = request.json.get('pais')
     mes_filtro = request.json.get('mes')
-    qtd_pais = consulta_quantidade_pais_periodo_popular(mes_filtro, pais_filtro)
+    qtd_pais = consulta_quantidade_pais_periodo_popular_cache(mes_filtro, pais_filtro)
     return jsonify({'pais': pais_filtro, 'mes': mes_filtro, 'quantidade': qtd_pais})    
 
 
@@ -537,7 +537,7 @@ def pais_imigracao_periodo_popular():
 def classificacao_pais_tempo():
     pais_filtro = request.json.get('pais')
     mes_filtro = request.json.get('mes')
-    classificacao_popular = consulta_classificacao_pais_tempo(pais_filtro, mes_filtro)
+    classificacao_popular = consulta_classificacao_pais_tempo_cache(pais_filtro, mes_filtro)
     return jsonify({'pais': pais_filtro, 'mes': mes_filtro, 'classificacao': classificacao_popular})
 
 # ------------- ROTAS DA API -------------
