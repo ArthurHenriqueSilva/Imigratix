@@ -9,10 +9,14 @@ import "../styles/style.css";
 
 const Home = () => {
   const { userName } = useUserContext();
+
   return (
     <div>
       <header className="header">
-        <img className="logo" src={logo} alt="Logo" />
+        {/* Use o Link para envolver a imagem da logo */}
+        <Link to="/">
+          <img className="logo" src={logo} alt="Logo" />
+        </Link>
         <div className="HiUser">
           {userName ? <h2>Olá, {userName}</h2> : <h2>Olá, Visitante.</h2>}
         </div>

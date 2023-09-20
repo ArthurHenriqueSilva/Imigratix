@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/Login.css";
 import logo from "../assets/logo.png";
-import "@fortawesome/fontawesome-free/css/all.css";
+import { useUserContext } from "../components/UserContext"; // Importe useUserContext
 
 const Sign = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [registrationResult, setRegistrationResult] = useState(null);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+  const { updateUser } = useUserContext(); // Obtenha o método updateUser do contexto
 
   const handleRegistration = async () => {
     const requestOptions = {
@@ -18,13 +19,17 @@ const Sign = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:80/api/insert-user", requestOptions);
+      const response = await fetch(
+        "http://localhost:80/api/insert-user",
+        requestOptions
+      );
       const data = await response.json();
       setRegistrationResult(data);
-      console.log(data); // Print the response data from the server
+      console.log(data);
 
       if (data.status === 201) {
-        navigate("/"); // Redirect to the Home page
+        updateUser(username);
+        navigate("/");
       }
     } catch (error) {
       console.error(error);
@@ -54,7 +59,11 @@ const Sign = () => {
             Cadastrar-se
           </button>
           {registrationResult && (
-            <p className={registrationResult.status === 201 ? "success" : "error"}>
+            <p
+              className={
+                registrationResult.status === 201 ? "success" : "error"
+              }
+            >
               {registrationResult.status === 201
                 ? "Cadastro realizado com sucesso!"
                 : "Erro ao cadastrar. Por favor, verifique suas informações."}

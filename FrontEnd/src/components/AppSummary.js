@@ -1,7 +1,7 @@
 import React from "react";
 import Slider from "react-slick";
-import ChartComponent from "./chartComponent";
 import HeatmapMap from "./mapaCalor";
+import logo from "../assets/logo.png";
 import "../styles/style.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -39,6 +39,9 @@ const AppSummary = () => {
             e utilize os recursos interativos para explorar os dados em
             detalhes.
           </p>
+          <div>
+            <img src={logo} alt="IMIGRATIX" className="centered-image" />
+          </div>
         </div>
         <div className="resumeData">
           <h2>Resumo dos dados</h2>
@@ -106,9 +109,9 @@ const AppSummary = () => {
             </tbody>
           </table>
           <div className="clear"></div>
-        </div>
-        <div className="resumeData">
-          <ChartComponent />
+          <div>
+            <img src={logo} alt="IMIGRATIX" className="centered-image" />
+          </div>
         </div>
         <div className="resumeData">
           <HeatmapMap />

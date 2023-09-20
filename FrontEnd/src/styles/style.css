@@ -244,27 +244,6 @@ body {
   background-color: #000050;
 }
 
-.resetButton {
-  border: 5px solid red;
-  position: relative;
-  bottom: 35px;
-  left: 60px;
-  width: fit-content;
-  color: #fff;
-  height: 100%;
-  padding: 2px 10px;
-  background-color: red;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  line-height: 1;
-}
-
-.resetButton:hover {
-  color: red;
-  background-color: #fff;
-}
-
 .suggestions-list {
   list-style: none;
   padding: 0;
